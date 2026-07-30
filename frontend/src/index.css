@@ -1,0 +1,44 @@
+@import "tailwindcss";
+
+* {
+  font-family: 'Inter', sans-serif;
+}
+body {
+  color: #374151;
+}
+
+.card {
+  box-shadow: 
+    0 1px 2px rgba(0,0,0,0.04),
+    0 8px 24px rgba(0,0,0,0.06);
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(0,0,0,0.08);
+}
+
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.balance-positive {
+  background: linear-gradient(-45deg, #A7F3D0, #6EE7B7, #D1FAE5, #A7F3D0);
+  background-size: 400% 400%;
+  animation: gradientShift 6s ease infinite;
+}
+
+.balance-negative {
+  background: linear-gradient(-45deg, #FCA5A5, #FDA4AF, #FECDD3, #FCA5A5);
+  background-size: 400% 400%;
+  animation: gradientShift 6s ease infinite;
+}
+.swiper-pagination-bullet-active {
+  background: #C4B5FD !important;
+}
+
+.swiper-pagination-bullet {
+  background: #D1D5DB;
+}
