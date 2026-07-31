@@ -44,6 +44,27 @@ router.post('/', async (req, res) => {
   }
 });
 
+router.put('/:id', async (req, res) => {
+  const { id } = req.params;
+  const { name, type, budget_limit } = req.body;
+
+  try {
+    const result = await pool.query(
+      'UPDATE categories SET name = $1, type = $2, budget_limit = $3 WHERE id = $4 RETURNING *',
+      [name, type, budget_limit, id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Category not found' });
+    }
+
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to update category' });
+  }
+});
+
 router.delete('/:id', async (req, res) =>{
   const { id } = req.params;
 
