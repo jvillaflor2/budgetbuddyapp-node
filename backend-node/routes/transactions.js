@@ -12,4 +12,19 @@ router.get('/', async (req, res) => {
     }
 });
 
+router.post('/', async (req, res) => {
+  const { amount, category_id, date, note } = req.body;
+
+  try {
+    const result = await pool.query(
+      'INSERT INTO transactions (amount, category_id, date, note) VALUES ($1, $2, $3, $4) RETURNING *',
+      [amount, category_id, date, note]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to create transaction' });
+  }
+});
+
 module.exports = router;
