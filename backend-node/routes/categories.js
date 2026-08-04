@@ -50,7 +50,12 @@ router.put('/:id', async (req, res) => {
 
   try {
     const result = await pool.query(
-      'UPDATE categories SET name = $1, type = $2, budget_limit = $3 WHERE id = $4 RETURNING *',
+       `UPDATE categories 
+       SET name = COALESCE($1, name), 
+           type = COALESCE($2, type), 
+           budget_limit = COALESCE($3, budget_limit) 
+       WHERE id = $4 
+       RETURNING *`,
       [name, type, budget_limit, id]
     );
 
