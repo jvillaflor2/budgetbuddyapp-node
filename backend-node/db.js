@@ -1,5 +1,9 @@
 require('dotenv').config();
 const { Pool } = require('pg');
+const types = require('pg').types;
+
+types.setTypeParser(1082, (val) => val);
+types.setTypeParser(1700, (val) => parseFloat(val));
 
 const pool = new Pool({
   user: process.env.DB_USER,
