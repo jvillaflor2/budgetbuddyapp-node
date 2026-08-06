@@ -13,6 +13,7 @@ function Transactions() {
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [search, setSearch] = useState('');
+  const [editingId, setEditingId] = useState(null);
 
   useEffect(() => {
     fetchTransactions();
@@ -66,17 +67,44 @@ function Transactions() {
       return;
     }
     setError('');
-    await axios.post(`${API_URL}/transactions`, {
+    
+    const payload = {
       amount: parseFloat(amount),
       category_id: parseInt(categoryId),
       date,
       note
-    });
+    };
+
+    if (editingId) {
+      await axios.put(`${API_URL}/transactions/${editingId}`, payload);
+    } else {
+      await axios.post(`${API_URL}/transactions`, payload);
+    }
+
     setAmount('');
     setCategoryId('');
     setDate('');
     setNote('');
+    setEditingId(null);
     fetchTransactions();
+  };
+
+    const startEdit = (t) => {
+    setEditingId(t.id);
+    setAmount(t.amount);
+    setCategoryId(t.category_id);
+    setDate(t.date);
+    setNote(t.note || '');
+    setError('');
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setAmount('');
+    setCategoryId('');
+    setDate('');
+    setNote('');
+    setError('');
   };
 
   const deleteTransaction = async (id) => {
@@ -126,7 +154,7 @@ function Transactions() {
         />
       </div>
       <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 mb-6">
-        <h2 className="text-lg font-semibold text-gray-700 mb-4">Add Transaction</h2>
+        <h2 className="text-lg font-semibold text-gray-700 mb-4">{editingId ? 'Edit Transaction' : 'Add Transaction'}</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
       <input
         type="number"
@@ -165,8 +193,18 @@ function Transactions() {
       {error && (
       <p className="text-sm text-red-400 mt-2">{error}</p>
         )}
-      <button onClick={addTransaction}
-              className="mt-4 bg-[#C4B5FD] text-violet-900 text-sm font-medium px-5 py-2 rounded-xl hover:bg-violet-300 transition-colors">Add Transaction</button>
+      <div className="flex gap-3 mt-4">
+        <button onClick={addTransaction}
+                className="bg-[#C4B5FD] text-violet-900 text-sm font-medium px-5 py-2 rounded-xl hover:bg-violet-300 transition-colors">
+          {editingId ? 'Update Transaction' : 'Add Transaction'}
+        </button>
+        {editingId && (
+          <button onClick={cancelEdit}
+                  className="text-sm text-gray-500 px-5 py-2 rounded-xl hover:bg-gray-100 transition-colors">
+            Cancel
+          </button>
+        )}
+      </div>
       </div>
       <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
         <h2 className="text-lg font-semibold text-gray-700 mb-4">All Transactions</h2>
@@ -185,12 +223,18 @@ function Transactions() {
                 <p className="text-sm font-semibold text-gray-800">
                   {cat && cat.type === 'income' ? '+' : '-'}${t.amount}
                 </p>
-                <button
-                  onClick={() => deleteTransaction(t.id)}
-                  className="text-xs text-gray-400 hover:text-red-400 transition-colors"
-                >
-                  Delete
-                </button>
+            <button
+              onClick={() => startEdit(t)}
+              className="text-xs text-gray-400 hover:text-violet-500 transition-colors"
+            >
+              Edit
+            </button>
+            <button
+              onClick={() => deleteTransaction(t.id)}
+              className="text-xs text-gray-400 hover:text-red-400 transition-colors"
+            >
+              Delete
+            </button>
               </div>
               </li>
             );
