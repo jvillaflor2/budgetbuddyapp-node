@@ -1,20 +1,21 @@
 import axios from 'axios';
-import React, {useState, useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 import API_URL from '../api';
 
-function Categories(){
+function Categories() {
   const [categories, setCategories] = useState([]);
   const [name, setName] = useState('');
   const [type, setType] = useState('expense');
   const [error, setError] = useState('');
   const [budgetLimit, setBudgetLimit] = useState('');
+  const [editingId, setEditingId] = useState('');
 
   useEffect(() => {
     fetchCategories();
   }, []);
 
-  
-  const fetchCategories = async() => {
+
+  const fetchCategories = async () => {
     const response = await axios.get(`${API_URL}/categories`);
     setCategories(response.data);
 
@@ -25,21 +26,29 @@ function Categories(){
       setError('Please enter a category name');
       return;
     }
-     if (name.trim().length < 2) {
+    if (name.trim().length < 2) {
       setError('Category name must be at least 2 characters');
       return;
     }
     const duplicate = categories.find(
-      cat => cat.name.toLowerCase() === name.trim().toLowerCase()
+      cat => cat.name.toLowerCase() === name.trim().toLowerCase() && cat.id !== editingId
     );
     if (duplicate) {
       setError('This category already exists');
       return;
     }
 
-    await axios.post(`${API_URL}/categories`, { name, type });
+
+    if (editingId) {
+      await axios.put(`${API_URL}/categories/${editingId}`, { name, type });
+    } else {
+      await axios.post(`${API_URL}/categories`, { name, type });
+    }
+
     setError('');
     setName('');
+    setType('expense');
+    setEditingId(null);
     fetchCategories();
   };
 
@@ -54,12 +63,25 @@ function Categories(){
     });
     fetchCategories();
   };
+  const startEdit = (cat) => {
+    setEditingId(cat.id);
+    setName(cat.name);
+    setType(cat.type);
+    setError('');
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setName('');
+    setType('expense');
+    setError('');
+  };
   return (
     <div>
       <h1 className="text-2xl font-semibold text-gray-800 mb-6">Categories</h1>
 
       <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 mb-6">
-        <h2 className="text-lg font-semibold text-gray-700 mb-4">Add Category</h2>
+        <h2 className="text-lg font-semibold text-gray-700 mb-4">{editingId ? 'Edit Category' : 'Add Category'}</h2>
         <div className="flex flex-col md:flex-row gap-3">
           <input
             type="text"
@@ -77,14 +99,22 @@ function Categories(){
             <option value="income">Income</option>
           </select>
           {error && (
-          <p className="text-sm text-red-400 mt-2">{error}</p>
+            <p className="text-sm text-red-400 mt-2">{error}</p>
           )}
           <button
             onClick={addCategory}
             className="bg-[#C4B5FD] text-violet-900 text-sm font-medium px-5 py-2 rounded-xl hover:bg-violet-300 transition-colors"
           >
-            Add Category
+            {editingId ? 'Update Category' : 'Add Category'}
           </button>
+          {editingId && (
+            <button
+              onClick={cancelEdit}
+              className="text-sm text-gray-500 px-5 py-2 rounded-xl hover:bg-gray-100 transition-colors"
+            >
+              Cancel
+            </button>
+          )}
         </div>
       </div>
 
@@ -109,6 +139,12 @@ function Categories(){
                     className="w-28 border border-gray-200 rounded-xl px-3 py-1 text-xs text-gray-700 focus:outline-none focus:ring-2 focus:ring-violet-300"
                   />
                 )}
+                <button
+                  onClick={() => startEdit(cat)}
+                  className="text-xs text-gray-400 hover:text-violet-500 transition-colors"
+                >
+                  Edit
+                </button>
                 <button
                   onClick={() => deleteCategory(cat.id)}
                   className="text-xs text-gray-400 hover:text-red-400 transition-colors"
